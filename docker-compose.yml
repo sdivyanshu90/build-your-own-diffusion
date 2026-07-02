@@ -1,0 +1,50 @@
+# Convenience services for local Docker workflows.
+#
+#   docker compose run --rm smoke                 # fast end-to-end check
+#   docker compose run --rm train                 # long training job (GPU)
+#   docker compose run --rm sample                # generate from last checkpoint
+#
+# Remove the `deploy` block (or use the cpu image) on hosts without the
+# NVIDIA container toolkit.
+services:
+  train:
+    build: .
+    image: diffusionlab
+    command: ["train", "--config", "configs/cifar10.yaml"]
+    volumes:
+      - ./data:/app/data
+      - ./runs:/app/runs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  smoke:
+    image: diffusionlab
+    build: .
+    command: ["train", "--config", "configs/smoke.yaml"]
+    volumes:
+      - ./runs:/app/runs
+
+  sample:
+    image: diffusionlab
+    build: .
+    command:
+      [
+        "sample",
+        "--checkpoint", "runs/cifar10-ddpm/checkpoints/last.pt",
+        "--num-images", "64",
+        "--output", "runs/cifar10-ddpm/generated.png",
+      ]
+    volumes:
+      - ./runs:/app/runs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
