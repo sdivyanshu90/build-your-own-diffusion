@@ -1,0 +1,55 @@
+# Miniature end-to-end configuration for CI and local smoke tests.
+# Uses the procedural synthetic dataset (no download) and finishes a full
+# train -> checkpoint -> sample cycle in well under a minute on CPU.
+run_name: smoke
+
+model:
+  in_channels: 3
+  base_channels: 16
+  channel_multipliers: [1, 2]
+  num_res_blocks: 1
+  attention_levels: [1]
+  num_heads: 2
+  dropout: 0.0
+  num_groups: 4
+
+diffusion:
+  num_train_timesteps: 100
+  beta_schedule: cosine
+  prediction_type: epsilon
+  clip_sample: true
+  variance_type: fixed_small
+  sampler: ddim
+  num_inference_steps: 10
+  ddim_eta: 0.0
+  timestep_spacing: leading
+
+data:
+  dataset: synthetic
+  data_dir: ./data
+  image_size: 16
+  batch_size: 8
+  num_workers: 0
+  horizontal_flip: false
+  download: false
+  synthetic_size: 64
+
+optim:
+  lr: 1.0e-3
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  warmup_steps: 5
+  grad_clip_norm: 1.0
+  ema_decay: 0.99
+
+training:
+  max_steps: 20
+  gradient_accumulation_steps: 1
+  mixed_precision: none
+  log_interval: 5
+  sample_interval: 10
+  checkpoint_interval: 10
+  num_sample_images: 4
+  output_dir: runs
+  seed: 0
+  device: cpu
