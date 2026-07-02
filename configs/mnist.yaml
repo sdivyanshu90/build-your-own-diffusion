@@ -1,0 +1,54 @@
+# MNIST 32x32 (upscaled from 28x28) -- a fast first experiment.
+# ~9M parameters; clearly digit-shaped samples typically appear well before
+# 10k steps, even on CPU-only machines given patience.
+run_name: mnist-ddpm
+
+model:
+  in_channels: 1
+  base_channels: 64
+  channel_multipliers: [1, 2, 4]      # 32 -> 16 -> 8
+  num_res_blocks: 2
+  attention_levels: [1]               # self-attention at 16x16 (+ bottleneck)
+  num_heads: 4
+  dropout: 0.1
+  num_groups: 8
+
+diffusion:
+  num_train_timesteps: 1000
+  beta_schedule: cosine
+  prediction_type: epsilon
+  clip_sample: true
+  variance_type: fixed_small
+  sampler: ddim
+  num_inference_steps: 50
+  ddim_eta: 0.0
+  timestep_spacing: leading
+
+data:
+  dataset: mnist
+  data_dir: ./data
+  image_size: 32
+  batch_size: 128
+  num_workers: 4
+  horizontal_flip: false              # digits are not flip-invariant
+  download: true
+
+optim:
+  lr: 2.0e-4
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  warmup_steps: 1000
+  grad_clip_norm: 1.0
+  ema_decay: 0.999                    # faster EMA for a short run
+
+training:
+  max_steps: 30000
+  gradient_accumulation_steps: 1
+  mixed_precision: none
+  log_interval: 100
+  sample_interval: 2000
+  checkpoint_interval: 5000
+  num_sample_images: 64
+  output_dir: runs
+  seed: 42
+  device: auto
