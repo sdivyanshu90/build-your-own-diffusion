@@ -1,0 +1,54 @@
+# CIFAR-10 32x32 unconditional model -- the standard DDPM benchmark setup.
+# ~57M parameters; expect recognisable samples after ~50k steps on one GPU
+# and good quality at 200k+.
+run_name: cifar10-ddpm
+
+model:
+  in_channels: 3
+  base_channels: 128
+  channel_multipliers: [1, 2, 2, 2]   # 32 -> 16 -> 8 -> 4
+  num_res_blocks: 2
+  attention_levels: [1]               # self-attention at 16x16 (+ bottleneck)
+  num_heads: 4
+  dropout: 0.1
+  num_groups: 32
+
+diffusion:
+  num_train_timesteps: 1000
+  beta_schedule: cosine
+  prediction_type: epsilon
+  clip_sample: true
+  variance_type: fixed_small
+  sampler: ddim
+  num_inference_steps: 100
+  ddim_eta: 0.0
+  timestep_spacing: leading
+
+data:
+  dataset: cifar10
+  data_dir: ./data
+  image_size: 32
+  batch_size: 128
+  num_workers: 4
+  horizontal_flip: true
+  download: true
+
+optim:
+  lr: 2.0e-4
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  warmup_steps: 5000
+  grad_clip_norm: 1.0
+  ema_decay: 0.9999
+
+training:
+  max_steps: 200000
+  gradient_accumulation_steps: 1
+  mixed_precision: none      # set to fp16/bf16 to speed up on capable GPUs
+  log_interval: 100
+  sample_interval: 5000
+  checkpoint_interval: 10000
+  num_sample_images: 64
+  output_dir: runs
+  seed: 42
+  device: auto
