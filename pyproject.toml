@@ -1,0 +1,123 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "diffusionlab"
+version = "1.0.0"
+description = "A production-quality, from-scratch implementation of denoising diffusion models (UNet + DDPM/DDIM schedulers) in PyTorch."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "build-your-own-diffusion contributors" }]
+keywords = ["diffusion", "ddpm", "ddim", "unet", "generative", "pytorch"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
+dependencies = [
+  "torch>=2.2",
+  "torchvision>=0.17",
+  "PyYAML>=6.0",
+  "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.4",
+  "mypy>=1.10",
+  "types-PyYAML",
+  "pre-commit>=3.7",
+]
+
+[project.scripts]
+diffusionlab = "diffusionlab.cli:entrypoint"
+
+[project.urls]
+Homepage = "https://github.com/sdivyanshu90/build-your-own-diffusion"
+Documentation = "https://github.com/sdivyanshu90/build-your-own-diffusion/tree/main/docs"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+diffusionlab = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "C4",  # flake8-comprehensions
+  "SIM", # flake8-simplify
+  "RUF", # ruff-specific rules
+]
+ignore = [
+  "SIM108", # ternary rewrites can hurt readability in math-heavy code
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+# torch's stubs type ``nn.Module.__call__`` as returning Any, so every model
+# forward would need a cast; disabling no-any-return is the pragmatic choice.
+warn_return_any = false
+show_error_codes = true
+files = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["torchvision.*", "tqdm.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "slow: long-running tests (deselect with '-m \"not slow\"')",
+]
+filterwarnings = [
+  "ignore::DeprecationWarning:torchvision.*",
+]
+
+[tool.coverage.run]
+source = ["diffusionlab"]
+branch = true
+omit = ["*/__main__.py"]  # covered via a subprocess test, invisible to coverage
+
+[tool.coverage.report]
+precision = 1
+show_missing = true
+fail_under = 95
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "\\.\\.\\.",
+]
